@@ -3,26 +3,28 @@ dotenv.config()
 
 import express from 'express';
 const app = express();
-import { nanoid } from 'nanoid';
+
 import connectDb from './src/config/mongodb.config.js';
-import urlModel from './src/models/shorturl.model.js'
+import urlSchema from './src/models/shortUrl.model.js'
+import shortUrl from './src/routes/shortUrl.routes.js'
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-app.post('/api/create', (req, res) => {
-    const { url } = req.body;
-    const shortUrl = nanoid(7)
-    const newUrl = new urlSchema(
-        {
-            orignalUrl: url,
-            shortUrl: shortUrl,
-        }
-    )
-    newUrl.save()
-    res.send(nanoid(7))
-    console.log(url, nanoid(7));
+app.use('/api/create', shortUrl)
+
+
+app.get('/:id', async (req, res) => {
+    const { id } = req.params
+    const url = await urlSchema.findOne({ short_url: id })
+    if (url) {
+        res.redirect(url.orignalUrl)
+    }
+    else {
+        res.status(404).send('NOT FOUND')
+    }
 })
+
 
 app.listen(8000, () => {
     connectDb()
